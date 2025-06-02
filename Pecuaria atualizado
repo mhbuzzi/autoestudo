@@ -1,0 +1,70 @@
+
+---
+title: "Pecuária Bovina"
+format: html
+editor: visual
+---
+
+
+```{r}
+#| label: load-packages
+#| include: false
+
+
+# Carrega os pacotes necessários
+library(tidyverse)
+library(GetBCBData)
+library(gganimate)
+library(gifski)
+library(knitr)
+
+# Define ID da série e coleta os dados
+my.id <- c(Cattle = 1298)
+
+df.bcb <- gbcbd_get_series(
+  id = my.id,
+  first.date = '1991-01-01',
+  last.date = Sys.Date(),
+  format.data = 'long',
+  use.memoise = TRUE,
+  cache.path = tempdir(),
+  do.parallel = FALSE
+)
+```
+
+Desde 1991, a pecuária bovina brasileira cresceu de forma expressiva, impulsionada por avanços tecnológicos e aumento da demanda. Hoje, o país é um dos maiores produtores e exportadores de carne bovina do mundo.
+
+
+
+```{r}
+#| label: grafico-animado
+#| fig-cap: "Animação do crescimento da pecuária bovina no Brasil"
+#| warning: false
+#| message: false
+#| echo: false
+
+# Cria o gráfico animado
+p <- ggplot(df.bcb, aes(x = ref.date, y = value)) +
+  geom_line(color = "steelblue", size = 1) +
+  labs(
+    title = 'Pecuária Bovina',
+    subtitle = paste0(min(df.bcb$ref.date), ' a ', max(df.bcb$ref.date)),
+    x = '', y = 'Cabeças de gado'
+  ) +
+  theme_minimal() +
+  transition_reveal(ref.date)
+
+# Renderiza de forma segura
+try({
+  anim <- animate(
+    p,
+    renderer = gifski_renderer(loop = TRUE),
+    width = 800,
+    height = 500,
+    fps = 20,
+    duration = 10
+  )
+  anim_save("pecuaria_bovina.gif", animation = anim)
+  knitr::include_graphics("pecuaria_bovina.gif")
+}, silent = FALSE)
+```
